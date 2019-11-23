@@ -1,0 +1,79 @@
+Name     MSXF4REG;
+PartNo   00;
+Date     23/11/2019;
+Revision 01;
+Designer Kimmo Kulovesi;
+Company  arkku;
+Assembly None;
+Location MSX;
+Device   g22v10;
+
+/*
+ * A GAL22V10 implementation of the MSX F4 IO register (for MSX 2+).
+ * Compile with WinCupl.
+ *
+ * By Kimmo Kulovesi, 2019-11-23
+ */
+
+    /* INPUTS */
+
+PIN 1 = clock;          /* needs to be pin 1, loopback from pin 23 */
+PIN [2..9] = [A0..7];
+PIN 10 = WR;
+PIN 11 = RD;
+PIN 13 = D7;
+PIN 15 = IORQ;
+PIN 20 = M1;            /* Z80 M1, tie high if not used */
+
+    /* OUTPUTS */
+
+PIN 14 = D7_out;        /* tri-stated output, loopback to pin 13: D7 */
+PIN 16 = oe_out;        /* !OE for an external tri-state buffer */
+PIN 17 = state_out;     /* state of the register (not tri-stated) */
+PIN 18 = state_inverted;/* inverted state of the register */
+PIN 19 = we_out;        /* !WE for an external tri-state buffer */        
+PIN 21 = IO7AB;         /* !IO 0x7A or 0x7B, for OPLL */
+PIN 22 = IO7AB_alt;     /* !IO 0x7A or 0x7B, for OPLL */
+PIN 23 = clock_out;     /* loopback clock to pin 1 */
+
+    /* LOGIC */
+
+FIELD address = [A7..0];
+
+f4_request = address:'h'F4 & !IORQ & M1;
+
+clock_out = f4_request & !WR;
+
+D7_out.d  = D7;
+D7_out.oe = f4_request & !RD;
+D7_out.sp = 'b'0;               /* synchronous preset, not used */
+D7_out.ar = 'b'0;               /* asynchronous reset, not used */
+
+oe_out = !(f4_request & !RD);
+we_out = !(f4_request & !WR);
+state_out = D7_out;
+state_inverted = !D7_out;
+
+    /* IO 0x7A/0x7B decoding on the unused pins, not related to F4 */
+
+IO7AB = address:['h'7A..'h'7B] & !IORQ & M1;
+IO7AB_alt = address:['h'7A..'h'7B] & !IORQ;
+
+/*****************************************************************************
+                               ______________
+                              |   GAL22V10   |
+                    clock >---|1           24|---< Vcc                      
+                       A0 >---|2           23|---> clock                
+                       A1 >---|3           22|---> !IO7AB (ignoring M1)                        
+                       A2 >---|4           21|---> !IO7AB             
+                       A3 >---|5           20|---< !M1                          
+                       A4 >---|6           19|---> !F4WE
+                       A5 >---|7           18|---> !F4D
+                       A6 >---|8           17|---> F4D                          
+                       A7 >---|9           16|---> !F4OE                          
+                      !WR >---|10          15|---< !IORQ                   
+                      !RD >---|11          14|---> D7                 
+                      GND >---|12          13|---< D7                 
+                              |______________|
+
+******************************************************************************/
