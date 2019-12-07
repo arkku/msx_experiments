@@ -4,7 +4,7 @@ In comparison to older versions, MSX2+ adds a 1-bit IO register at the address `
 to record whether the computer has already been booted up. If the bit is set,
 the boot logo and screen are skipped. This allows faster resets.
 
-The file [PLD file](MSXF4REG.pld) is a CUPL implementation of the F4 register for
+The [PLD file](MSXF4REG.pld) is a CUPL implementation of the F4 register for
 a GAL22V10 programmable logic IC. The file can be compiled with, e.g., WinCUPL,
 but a pre-compiled [JEDEC file](MSXF4REG.jed) is also included.
 
